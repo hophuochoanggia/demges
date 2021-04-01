@@ -1,24 +1,56 @@
-import logo from './logo.svg';
-import './App.css';
+import { useCallback, useState } from "react";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import List from "./View/List";
+import Detail from "./View/Detail";
+import debounce from "./util/debounce";
+import "./App.css";
+import { getParagraphs } from "./data";
+
+const limit = 10;
+const tags = ["tag1", "tag2", "tag3", "tag4", "tag5"];
 
 function App() {
+  const [tagState, setTagState] = useState({});
+  const [paragraphs, setParagraphs] = useState({
+    total: 0,
+    data: [],
+    page: 0,
+    isLoading: true,
+  });
+  const [search, setSearch] = useState("");
+
+  const filter = useCallback(
+    debounce((search) => {
+      getParagraphs({ page: 0, limit, search }).then((response) =>
+        setParagraphs({ ...response, page: 0 })
+      );
+    }, 500),
+    []
+  );
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <Switch>
+          <Route path="/detail">
+            <Detail tags={tags} tagState={tagState} setTagState={setTagState} />
+          </Route>
+          <Route path="/">
+            <List
+              paragraphs={paragraphs}
+              setParagraphs={setParagraphs}
+              search={search}
+              setSearch={setSearch}
+              limit={limit}
+              filter={filter}
+              tagState={tagState}
+              setTagState={setTagState}
+              tags={tags}
+            />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
